@@ -1,0 +1,24 @@
+import {test,expect} from '@playwright/test';
+import {parseCarousel} from '../src/validation';
+test('copies a valid content-generation prompt without changing the editor and supports manual fallback',async({page,context})=>{
+  await context.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.goto('/content-studio/');
+  const editor=page.getByLabel('เนื้อหา JSON');
+  const original=await editor.inputValue();
+  await page.getByText('โครงสร้าง JSON ที่รองรับ',{exact:true}).click();
+  await page.getByRole('button',{name:'คัดลอกโครงสร้าง JSON',exact:true}).click();
+  await expect(page.locator('.copy-status')).toContainText('คัดลอกแล้ว');
+  const copied=await page.evaluate(()=>navigator.clipboard.readText());
+  expect(copied).toContain('หัวข้อ: [ใส่หัวข้อข่าวหรือความรู้ที่ต้องการ]');
+  expect(copied).toContain('ไม่จำกัดจำนวน');
+  expect(copied).not.toContain('ai-bubble-signals');
+  const json=copied.match(/```json\n([\s\S]*?)\n```/)?.[1];
+  expect(json).toBeTruthy();expect(parseCarousel(json!).slides).toHaveLength(5);
+  await expect(editor).toHaveValue(original);
+  await page.evaluate(()=>{Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('clipboard blocked');}}});});
+  await page.getByRole('button',{name:'คัดลอกโครงสร้าง JSON',exact:true}).click();
+  const fallback=page.getByLabel('Prompt และโครงสร้าง JSON สำหรับคัดลอก');
+  await expect(fallback).toHaveValue(copied);
+  await page.getByRole('button',{name:'เลือกข้อความทั้งหมด',exact:true}).click();
+  expect(await fallback.evaluate((el:HTMLTextAreaElement)=>el.selectionEnd-el.selectionStart)).toBe(copied.length);
+});

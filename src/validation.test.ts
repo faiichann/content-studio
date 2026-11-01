@@ -1,0 +1,15 @@
+import { expect,it } from 'vitest';
+import { parseCarousel,type Carousel,MAX_BYTES } from './validation';
+import sample from '../sample.json';
+const fresh=():Carousel=>parseCarousel(JSON.stringify(sample));
+const parse=(s:unknown)=>parseCarousel(JSON.stringify(s));
+it('accepts the journal schema',()=>expect(fresh().schemaVersion).toBe(2));
+it.each(['{','null','[]'])('rejects bad input %s',v=>expect(()=>parseCarousel(v)).toThrow());
+it('enforces order',()=>{const s=fresh();s.slides.reverse();expect(()=>parse(s)).toThrow('type');});
+it('rejects unsafe images',()=>{const s=fresh();s.slides[1].visual={kind:'image',src:'https://example.com/x.svg',alt:'x',caption:'x',sourceIds:[]};expect(()=>parse(s)).toThrow('data URL');});
+it('checks refs',()=>{const s=fresh();s.slides[1].sourceIds=['missing'];expect(()=>parse(s)).toThrow('sourceIds');});
+it('permits a cover without metrics',()=>{const s=fresh();delete s.slides[0].metric;expect(parse(s).slides[0].metric).toBeUndefined();});
+it('checks chart dates and data',()=>{const s=fresh();s.slides[1].visual={kind:'chart',chart:{kind:'line',ticker:'TEST',interval:'1d',startDate:'2026-01-01',endDate:'2026-01-02',points:[],status:'ready',sourceIds:[]}};expect(()=>parse(s)).toThrow('2 จุด');});
+it('validates sizes and colors',()=>{expect(()=>parseCarousel(' '.repeat(MAX_BYTES+1))).toThrow('8 MB');const s=fresh();s.theme.accent='red';expect(()=>parse(s)).toThrow('HEX');});
+it('ignores legacy approval metadata',()=>{const s={...fresh(),status:'needs_review',verification:{approvedByUser:false}};expect(parse(s)).not.toHaveProperty('verification');});
+it('accepts arbitrary content list lengths',()=>{const s=fresh();s.slides[2].items=Array.from({length:12},()=>({heading:'หัวข้อ',body:'รายละเอียด',sourceIds:[]}));s.slides[3].lines=Array(10).fill('สรุป');s.slides[4].items=Array(20).fill('สิ่งที่ควรรู้');s.slides[1].visual={kind:'stats',stats:Array.from({length:8},()=>({label:'ตัวอย่างทดสอบ',value:1,unit:'หน่วย',sourceIds:[]}))};const parsed=parse(s);expect(parsed.slides[2].items).toHaveLength(12);expect(parsed.slides[4].items).toHaveLength(20);});

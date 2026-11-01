@@ -1,0 +1,96 @@
+{
+  "id": "financial-journal-template",
+  "brand": "faiichannn",
+  "format": {
+    "platform": "tiktok",
+    "width": 1080,
+    "height": 1440,
+    "theme": "financial-journal"
+  },
+  "event": {
+    "ticker": "MARKET",
+    "date": "2026-11-01",
+    "timezone": "Asia/Bangkok",
+    "currency": "THB"
+  },
+  "theme": {
+    "background": "#171717",
+    "foreground": "#F5F4EE",
+    "muted": "#BEBDB6",
+    "accent": "#F4D448",
+    "pastels": [
+      "#353127",
+      "#38342B",
+      "#29372F",
+      "#29333B"
+    ]
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "title": "อ่านข่าวหุ้น\nให้เห็นมากกว่า\nพาดหัว",
+      "subtitle": "ก่อนตัดสินใจ ลองมองให้ครบทั้งข้อมูล เหตุผล และคำถามที่ยังไม่มีคำตอบ",
+      "emoji": "🗞️",
+      "layout": "classic"
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "title": "ข่าวนี้\nกำลังบอกอะไรเรา?",
+      "visual": {
+        "kind": "placeholder",
+        "label": "พื้นที่สำหรับข้อมูลต้นทาง"
+      },
+      "explanation": "วางภาพหรือข้อมูลที่ตรวจสอบแล้วตรงนี้\nเล่าสั้น ๆ ว่าเกิดอะไรขึ้น และเทียบกับช่วงไหน",
+      "sourceIds": []
+    },
+    {
+      "id": "why",
+      "type": "reasons",
+      "title": "อ่านให้ลึก\nอีกนิด",
+      "items": [
+        {
+          "heading": "แยกข้อเท็จจริง",
+          "body": "อะไรคือสิ่งที่เกิดขึ้นแล้ว และอะไรยังเป็นเพียงการคาดการณ์?",
+          "sourceIds": []
+        },
+        {
+          "heading": "ดูบริบท",
+          "body": "ตัวเลขนี้เทียบกับช่วงไหน มีเหตุการณ์พิเศษอะไรหรือเปล่า?",
+          "sourceIds": []
+        },
+        {
+          "heading": "เช็กต้นทาง",
+          "body": "ข้อมูลมาจากบริษัท ตลาดหลักทรัพย์ หรือการตีความของผู้เขียน?",
+          "sourceIds": []
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "type": "summary",
+      "title": "มองให้ครบ\nก่อนสรุป",
+      "lines": [
+        "เริ่มจากข้อมูลที่ตรวจสอบได้",
+        "เชื่อมกับเหตุผลและบริบท",
+        "แล้วค่อยชั่งน้ำหนักด้วยตัวเอง"
+      ],
+      "sourceIds": []
+    },
+    {
+      "id": "questions",
+      "type": "takeaways",
+      "title": "สิ่งที่ควรรู้ไว้",
+      "cta": "บันทึกไว้ใช้กับข่าวถัดไป",
+      "items": [
+        "แยกข้อเท็จจริงออกจากการคาดการณ์",
+        "ดูบริบทและช่วงเวลาของข้อมูล",
+        "อ่านต้นทางก่อนสรุปจากพาดหัว"
+      ]
+    }
+  ],
+  "sources": [],
+  "schemaVersion": 2,
+  "category": "FINANCIAL JOURNAL"
+}
