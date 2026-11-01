@@ -23,3 +23,11 @@
 .journal-checklist li{padding:12px 0;border:0;border-radius:0;background:transparent}.journal-checklist{gap:20px}.journal-checklist.is-dense{gap:10px}.journal-checklist.is-dense li{padding:7px 0}.journal-checklist.is-dense p{font-size:20px}.journal-reasons.is-dense{gap:10px}.journal-reasons.is-dense .journal-reason{padding:13px 16px}.journal-reasons.is-dense h3{font-size:18px;margin-bottom:3px}.journal-reasons.is-dense p{font-size:14px}
 .journal-reasons.is-dense .journal-reason{padding:9px 14px}.journal-reasons.is-dense h3{font-size:17px}.journal-reasons.is-dense p{font-size:13px;line-height:1.6}.journal-checklist.is-dense{gap:8px}.journal-checklist.is-dense li{padding:5px 0}
 .copy-structure{width:100%;margin-top:10px}.copy-help,.copy-status{font-size:11px;line-height:1.8}.copy-status:empty{display:none}.copy-fallback label{display:block;margin-bottom:8px}.copy-fallback textarea{height:220px;resize:vertical;font-size:11px}.copy-fallback button{margin-top:8px}
+
+/* Keep the canvas/footer fixed; fit the complete content without cropping it. */
+.slide-content-viewport{position:relative;flex:1;min-height:0;z-index:1}
+.slide-content-viewport>.slide-copy{position:absolute;top:0;left:0;width:100%;height:auto;min-height:100%;overflow:visible;transform-origin:top left}
+.journal-checklist,.journal-checklist.is-dense{gap:8px}
+.journal-checklist li,.journal-checklist.is-dense li{gap:8px;padding:0;border:0;background:transparent}
+.journal-checklist p,.journal-checklist.is-dense p{font-size:17px;font-weight:400;line-height:1.65}
+.journal-checklist .check-box{width:18px;height:18px;min-height:18px;margin-top:5px}

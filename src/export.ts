@@ -1,20 +1,15 @@
 import { getFontEmbedCSS, toBlob } from 'html-to-image';
 import JSZip from 'jszip';
+import { fitSlideContent } from './fitSlide';
 export function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
-export function assertFits(nodes: HTMLElement[]) {
-  nodes.forEach((node, i) => {
-    const copy = node.querySelector<HTMLElement>('.slide-copy')!;
-    if (copy.scrollHeight > copy.clientHeight + 2 || copy.scrollWidth > copy.clientWidth + 2) throw new Error(`สไลด์ ${i + 1}: ข้อความล้นพื้นที่ กรุณาลดความยาวก่อนส่งออก`);
-  });
-}
 export async function exportImages(nodes: HTMLElement[], indexes: number[], onProgress: (message: string) => void) {
   await document.fonts.ready;
-  assertFits(nodes);
+  indexes.forEach(index => fitSlideContent(nodes[index]));
   const fontEmbedCSS = await getFontEmbedCSS(nodes[0], { preferredFontFormat: 'woff2' });
   // Let text reflow inside the SVG clone instead of freezing browser-measured heights.
   const includeStyleProperties = Array.from(getComputedStyle(nodes[0])).filter(name => name !== 'height' && name !== 'block-size');

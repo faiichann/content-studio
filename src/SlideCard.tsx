@@ -1,4 +1,5 @@
-import { forwardRef, type CSSProperties } from 'react';
+import { forwardRef, useLayoutEffect, useRef, type CSSProperties } from 'react';
+import { fitSlideContent } from './fitSlide';
 import { type Carousel, type LineChart, type Slide } from './validation';
 const fmt = (n: number) => new Intl.NumberFormat('en-US',{maximumFractionDigits:2}).format(n);
 function PriceChart({ chart, currency }: { chart: LineChart; currency: string }) {
@@ -22,7 +23,7 @@ function PriceChart({ chart, currency }: { chart: LineChart; currency: string })
 function Content({slide,data}:{slide:Slide;data:Carousel}) {
   switch(slide.type) {
     case 'cover': return <>
-      <div className="cover-photo">{slide.image ? <img src={slide.image.src} alt={slide.image.alt}/> : <div className="cover-photo-placeholder"><span>▧</span><p>เพิ่มภาพข่าว</p></div>}</div>
+      {slide.layout !== 'feature' && <div className="cover-photo">{slide.image ? <img src={slide.image.src} alt={slide.image.alt}/> : <div className="cover-photo-placeholder"><span>▧</span><p>เพิ่มภาพข่าว</p></div>}</div>}
       <h2>{slide.title}</h2>
       {slide.metric && <div className="journal-metric"><strong>{fmt(slide.metric.value)}<span>{slide.metric.unit}</span></strong><p>{slide.metric.label}</p></div>}
       <p className="journal-subtitle">{slide.subtitle}</p>
@@ -54,13 +55,28 @@ function Content({slide,data}:{slide:Slide;data:Carousel}) {
   }
 }
 export const SlideCard=forwardRef<HTMLElement,{slide:Slide;index:number;data:Carousel}>(function SlideCard({slide,index,data},ref){
+  const card = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const node = card.current;
+    if (!node) return;
+    let active = true;
+    const fit = () => { if (active) fitSlideContent(node); };
+    fit();
+    void document.fonts.ready.then(fit);
+    const observer = new ResizeObserver(fit);
+    observer.observe(node);
+    const images = Array.from(node.querySelectorAll('img'));
+    images.forEach(image => image.addEventListener('load', fit));
+    return () => { active = false; observer.disconnect(); images.forEach(image => image.removeEventListener('load', fit)); };
+  }, [slide, data]);
   const t=data.theme;
   const rgb=t.background.slice(1).match(/../g)!.map(x=>parseInt(x,16));
   const dark=(rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722)<128;
   const style={'--s-glow':`${t.accent}26`,'--s-border':dark ? '#ffffff26' : '#26262621','--s-bg':t.background,'--s-fg':t.foreground,'--s-muted':t.muted,'--s-accent':t.accent,'--pastel-0':t.pastels[0],'--pastel-1':t.pastels[1],'--pastel-2':t.pastels[2],'--pastel-3':t.pastels[3]} as CSSProperties;
-  return <article ref={ref} lang="th" style={style} className={`slide-card ${slide.type==='cover' ? `cover-${slide.layout ?? 'classic'}` : ''} template-${slide.type} ${dark ? 'slide-noir' : ''}`} aria-label={`สไลด์ ${index+1}: ${slide.title}`}>
+  return <article ref={node => { card.current = node; if (typeof ref === 'function') ref(node); else if (ref) ref.current = node; }} lang="th" style={style} className={`slide-card ${slide.type==='cover' ? `cover-${slide.layout ?? 'classic'}` : ''} template-${slide.type} ${dark ? 'slide-noir' : ''}`} aria-label={`สไลด์ ${index+1}: ${slide.title}`}>
+    {slide.type === 'cover' && slide.layout === 'feature' && <div className="cover-photo">{slide.image && <img src={slide.image.src} alt={slide.image.alt}/>}</div>}
     <header className="journal-header"><span>{data.category}</span><time dateTime={data.event.date}>{data.event.date.split('-').reverse().join('.')}</time></header>
-    <div className="slide-copy"><Content slide={slide} data={data}/></div>
+    <div className="slide-content-viewport"><div className="slide-copy"><Content slide={slide} data={data}/></div></div>
     <footer className="journal-footer"><strong>faiichannn 🐥</strong><span>{String(index+1).padStart(2,'0')} / 05</span></footer>
   </article>;
 });

@@ -52,6 +52,7 @@ test('five editorial templates, import validation, actual PNG/ZIP and mobile',as
   await page.setViewportSize({width:375,height:812});await page.screenshot({path:'test-results/studio-mobile.png',fullPage:true});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const long=structuredClone(sample);long.slides[0].title='ก\n'.repeat(20);
-  await page.getByLabel('เนื้อหา JSON').fill(JSON.stringify(long));await expect(page.getByRole('alert')).toContainText('ล้น');await expect(zipButton).toBeDisabled();
+  await page.getByLabel('เนื้อหา JSON').fill(JSON.stringify(long));await expect(zipButton).toBeEnabled();
+  await expect.poll(async()=>Number(await page.locator('.preview-frame article').getAttribute('data-content-scale'))).toBeLessThan(1);
   expect(errors).toEqual([]);
 });
