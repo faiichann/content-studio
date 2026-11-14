@@ -23,6 +23,7 @@ export default function App() {
   const [layoutReady, setLayoutReady] = useState(false);
   const nodes = useRef<(HTMLElement | null)[]>([]);
   const upload = useRef<HTMLInputElement>(null);
+  const jsonInput = useRef<HTMLTextAreaElement>(null);
   const imageUpload = useRef<HTMLInputElement>(null);
   const [imageTarget, setImageTarget] = useState<'cover' | 'data'>('data');
   const dirty = raw !== applied;
@@ -37,6 +38,7 @@ export default function App() {
     return () => { active = false; };
   }, [data]);
   function apply(text = raw) {
+    if (!text.trim()) { setError(''); setStatus('วาง JSON ใหม่เพื่ออัปเดตสไลด์ • แสดงพรีวิวล่าสุด'); return; }
     try { const parsed = parseCarousel(text); setLayoutReady(false); setData(parsed); setApplied(text); setError(''); setStatus('อัปเดตสไลด์อัตโนมัติแล้ว'); }
     catch (e) { setError((e as Error).message); setStatus('JSON ยังไม่สมบูรณ์ • แสดงพรีวิวล่าสุด'); }
   }
@@ -65,10 +67,10 @@ export default function App() {
       <div className="workspace">
         <section className="editor panel" aria-labelledby="editor-title"><div className="panel-heading"><div><span className="step">01</span><h2 id="editor-title">ใส่คอนเทนต์</h2></div><span className="subtle">JSON EDITOR</span></div>
           <p className="panel-description">วางหรือแก้ JSON แล้วสไลด์อัปเดตทันที</p>
-          <div className="editor-tools"><button disabled={busy} onClick={() => upload.current?.click()}>↑ อัปโหลด JSON</button><button disabled={busy} className="text-button" onClick={() => { setRaw(sampleText); apply(sampleText); }}>ใช้ตัวอย่าง</button></div>
+          <div className="editor-tools"><button disabled={busy} onClick={() => upload.current?.click()}>↑ อัปโหลด JSON</button><button disabled={busy} className="text-button" onClick={() => { setRaw(sampleText); apply(sampleText); }}>ใช้ตัวอย่าง</button><button disabled={busy || !raw} className="text-button" onClick={() => { setRaw(''); jsonInput.current?.focus(); }}>Clear Input JSON</button></div>
           <button className="channel-theme-button" disabled={busy} onClick={() => { try { const current = parseCarousel(raw); const text = JSON.stringify({...current, theme: sample.theme}, null, 2); setRaw(text); apply(text); } catch (e) { setError((e as Error).message); } }}>◐ ใช้ธีมช่อง · Yellow & Black Editorial</button>
           <input ref={upload} type="file" accept=".json,application/json" aria-label="อัปโหลดไฟล์ JSON" hidden onChange={e => { void loadFile(e.target.files?.[0]); e.target.value = ''; }} />
-          <label className="sr-only" htmlFor="json-input">เนื้อหา JSON</label><textarea id="json-input" spellCheck={false} value={raw} disabled={busy} onChange={e => setRaw(e.target.value)} aria-invalid={!!error} aria-describedby="json-help" />
+          <label className="sr-only" htmlFor="json-input">เนื้อหา JSON</label><textarea ref={jsonInput} id="json-input" spellCheck={false} value={raw} disabled={busy} onChange={e => setRaw(e.target.value)} aria-invalid={!!error} aria-describedby="json-help" />
           <div className="editor-caption" id="json-help"><span>UTF-8 · สูงสุด 8 MB</span><span>{dirty ? '● รอ JSON ที่สมบูรณ์' : '● LIVE PREVIEW'}</span></div>
           {error && <div className="error" role="alert">{error}</div>}
           <button className="text-button" disabled={busy} onClick={()=>download(new Blob([raw],{type:'application/json;charset=utf-8'}),'content.json')}>↓ บันทึก JSON ปัจจุบัน</button>
@@ -81,7 +83,7 @@ export default function App() {
           <div className="image-tools"><label className="layout-picker">รูปแบบปก <select disabled={busy} value={data.slides[0].layout ?? 'classic'} onChange={e=>{try {const next=parseCarousel(raw);next.slides[0].layout=e.target.value as 'classic'|'dark'|'feature';setRaw(JSON.stringify(next,null,2));}catch(e){setError((e as Error).message);}}}><option value="classic">News Classic</option><option value="dark">News Dark</option><option value="feature">News Feature</option></select></label><button disabled={busy} onClick={()=>{setImageTarget('cover');imageUpload.current?.click();}}>＋ ใส่ภาพข่าวบนปก</button><button disabled={busy} onClick={()=>{setImageTarget('data');imageUpload.current?.click();}}>＋ ใส่รูปในสไลด์ Data</button><input hidden ref={imageUpload} type="file" accept="image/png,image/jpeg,image/webp" aria-label="อัปโหลดภาพ Data" onChange={async e=>{ const file=e.target.files?.[0]; e.target.value=''; if(!file)return; try { if(file.size>5_000_000)throw new Error('ภาพต้องไม่เกิน 5 MB'); if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('ใช้ PNG/JPEG/WebP'); const current=parseCarousel(raw); const src=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('อ่านภาพไม่ได้'));reader.readAsDataURL(file);}); const img=new Image();img.src=src;await img.decode(); if(imageTarget==='cover') current.slides[0].image={src,alt:'ภาพประกอบข่าว'}; else current.slides[1].visual={kind:'image',src,alt:'ภาพประกอบข่าว',caption:'ภาพประกอบข่าว',sourceIds:[]};const text=JSON.stringify(current,null,2);setRaw(text);apply(text);setSelected(imageTarget==='cover'?0:1); }catch(e){setError((e as Error).message);} }}/><p>PNG / JPEG / WebP ไม่เกิน 5 MB · แนบรูปไว้ใน JSON และระบุที่มาภาพก่อนเผยแพร่</p></div>
           <nav className="slide-tabs" aria-label="เลือกสไลด์">{data.slides.map((s, i) => <button key={i} disabled={busy} aria-current={selected === i ? 'step' : undefined} aria-label={`ดูสไลด์ ${i + 1}`} onClick={() => setSelected(i)}><span className={`mini-card ${i === 0 || i === 4 ? 'mini-dark' : ''}`}><span>{String(i + 1).padStart(2, '0')}</span><b>{SLIDE_LABELS[i]}</b><i /></span><span>{SLIDE_LABELS[i]}</span></button>)}</nav>
           <div className="export-bar"><div><strong>พร้อมเล่าเรื่องของคุณ?</strong><small>PNG คมชัด · 1080 × 1440 px</small></div><div className="export-actions"><button disabled={busy || dirty || !layoutReady} onClick={() => void exportSet(false)}>↓ PNG ภาพนี้</button><button className="primary" disabled={busy || dirty || !layoutReady} onClick={() => void exportSet(true)}>↓ ZIP ทั้ง 5 ภาพ</button></div></div>
-          <p className="status" role="status" aria-live="polite">{dirty ? 'แก้ JSON ให้สมบูรณ์เพื่ออัปเดตสไลด์' : status}</p>
+          <p className="status" role="status" aria-live="polite">{dirty && raw.trim() ? 'แก้ JSON ให้สมบูรณ์เพื่ออัปเดตสไลด์' : status}</p>
         </section>
       </div>
       <footer className="app-footer"><span>MADE FOR YOUR NEXT GOOD IDEA.</span><span>content-studio / faiichannn 🐥</span></footer>
